@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}Savings goals{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Savings goals</h1>
+    <p class="muted">Virtual allocations: money set aside on paper. Nothing is moved, deposited or locked.</p>
+  </div>
+  <a class="btn btn--primary" href="{% url 'savings:create' %}">{% include "partials/icon.html" with name="plus" %} New goal</a>
+</div>
+
+<div class="stats">
+  <div class="stat"><p class="stat__label">Cash balance</p><p class="stat__value">{{ balances.cash_balance|ksh:0 }}</p><p class="stat__hint">Income − expenses</p></div>
+  <div class="stat"><p class="stat__label">Set aside in goals</p><p class="stat__value">{{ balances.allocated_savings|ksh:0 }}</p></div>
+  <div class="stat stat--accent"><p class="stat__label">Available to spend</p><p class="stat__value">{{ balances.available_balance|ksh:0 }}</p><p class="stat__hint">Cash balance − goals</p></div>
+</div>
+
+{% if not active and not completed and not archived %}
+<div class="card empty">
+  <p class="empty__title">No savings goals yet</p>
+  <p class="muted">Set aside money for next month's rent, exam fees or an emergency fund.</p>
+  <a class="btn btn--primary" href="{% url 'savings:create' %}">Create a goal</a>
+</div>
+{% endif %}
+
+{% if active %}
+<h2 class="section-title">Active</h2>
+<div class="grid grid--3">{% for goal in active %}{% include "savings/_card.html" %}{% endfor %}</div>
+{% endif %}
+{% if completed %}
+<h2 class="section-title">Completed</h2>
+<div class="grid grid--3">{% for goal in completed %}{% include "savings/_card.html" %}{% endfor %}</div>
+{% endif %}
+{% if archived %}
+<h2 class="section-title">Archived</h2>
+<div class="grid grid--3">{% for goal in archived %}{% include "savings/_card.html" %}{% endfor %}</div>
+{% endif %}
+{% endblock %}

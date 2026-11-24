@@ -1,0 +1,9 @@
+{% load finance %}<a class="card card--link goal-card" href="{% url 'savings:detail' goal.pk %}">
+  <div class="row-between">
+    <h3 class="card__title">{{ goal.name }}</h3>
+    <span class="chip chip--small{% if goal.priority == 1 %} chip--accent{% endif %}">{{ goal.get_priority_display }}</span>
+  </div>
+  {% include "partials/progress.html" with pct=goal.progress_percent state="goal" label=goal.name %}
+  <p class="small"><strong>{{ goal.saved_amount|ksh:0 }}</strong> of {{ goal.target_amount|ksh:0 }} · {{ goal.progress_percent }}%</p>
+  <p class="muted small">{% if goal.status == 'completed' %}Target reached{% elif goal.target_date %}Target date {{ goal.target_date|date:"d M Y" }}{% else %}No target date{% endif %}</p>
+</a>

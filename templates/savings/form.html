@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{% if goal %}Edit goal{% else %}New savings goal{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{% if goal %}Edit goal{% else %}New savings goal{% endif %}</h1>
+    <p class="muted">A goal earmarks part of your balance for something important.</p>
+  </div>
+</div>
+<div class="card narrow">
+  <form method="post" novalidate data-validate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    <div class="form-grid">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>
+    <div class="actions">
+      <button type="submit" class="btn btn--primary">Save goal</button>
+      <a class="btn btn--ghost" href="{% if goal %}{% url 'savings:detail' goal.pk %}{% else %}{% url 'savings:list' %}{% endif %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

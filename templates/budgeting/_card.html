@@ -1,0 +1,9 @@
+{% load finance %}<a class="card card--link budget-card" href="{% url 'budgeting:detail' s.budget.pk %}">
+  <div class="budget-card__head">
+    <h3 class="card__title">{{ s.budget.name }}</h3>
+    <span class="status status--{{ s.state }}">{% if s.state == 'exceeded' %}Exceeded{% elif s.state == 'warning' %}Warning{% else %}On track{% endif %}</span>
+  </div>
+  <p class="muted small">{{ s.budget.get_period_display }} · {{ s.budget.start_date|date:"d M" }} – {{ s.budget.end_date|date:"d M Y" }}</p>
+  {% include "partials/progress.html" with pct=s.percent state=s.state marker=s.time_percent label=s.budget.name %}
+  <p class="budget-card__nums"><strong>{{ s.spent|ksh:0 }}</strong> of {{ s.budget.total_limit|ksh:0 }} · {{ s.percent|floatformat:0 }}% used</p>
+</a>

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load finance static %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hello, {{ user.display_name }}</h1>
+    <p class="muted">{{ date_range.label }}</p>
+  </div>
+  <form method="get" class="segmented" aria-label="Choose period">
+    {% for key, label in period_choices %}
+      <button type="submit" name="period" value="{{ key }}" class="segmented__btn{% if key == period %} is-active{% endif %}" aria-pressed="{% if key == period %}true{% else %}false{% endif %}">{{ label }}</button>
+    {% endfor %}
+  </form>
+</div>
+
+{% if not has_data %}
+<section class="card card--soft onboarding">
+  <h2 class="card__title">Let's set things up</h2>
+  <ol class="steps">
+    <li><a href="{% url 'transactions:income_create' %}">Record your income</a> (HELB, allowance, side hustle).</li>
+    <li><a href="{% url 'transactions:expense_create' %}">Add today's expenses</a> or paste an M-Pesa SMS.</li>
+    <li><a href="{% url 'budgeting:create' %}">Create a monthly budget</a>.</li>
+    <li><a href="{% url 'accounts:settings' %}">Add your semester dates</a> for runway estimates.</li>
+  </ol>
+</section>
+{% endif %}
+
+<div class="stats">
+  <div class="stat stat--accent">
+    <p class="stat__label">Available balance</p>
+    <p class="stat__value">{{ balances.available_balance|ksh:0 }}</p>
+    <p class="stat__hint">After {{ balances.allocated_savings|ksh:0 }} set aside in goals</p>
+  </div>
+  <div class="stat">
+    <p class="stat__label">Income · {{ date_range.label }}</p>
+    <p class="stat__value text-positive">{{ period_totals.income|ksh:0 }}</p>
+  </div>
+  <div class="stat">
+    <p class="stat__label">Expenses · {{ date_range.label }}</p>
+    <p class="stat__value text-negative">{{ period_totals.expenses|ksh:0 }}</p>
+  </div>
+  <div class="stat">
+    <p class="stat__label">Net · {{ date_range.label }}</p>
+    <p class="stat__value {% if period_totals.net < 0 %}text-negative{% endif %}">{{ period_totals.net|ksh:0 }}</p>
+  </div>
+</div>
+
+{% if insights %}
+<section aria-labelledby="ins-title">
+  <div class="row-between">
+    <h2 id="ins-title" class="section-title">AI insights</h2>
+    <a class="link" href="{% url 'ai_engine:insights' %}">See all and why →</a>
+  </div>
+  <div class="grid grid--3">
+    {% for i in insights %}
+    <article class="card insight insight--{{ i.severity }}">
+      <p class="insight__kind">{{ i.get_kind_display }}</p>
+      <h3 class="insight__title">{{ i.title }}</h3>
+      <p class="insight__msg">{{ i.message|truncatewords:40 }}</p>
+      <p class="insight__meta">Reliability: {{ i.get_reliability_display }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="grid grid--2 charts" data-dashboard data-chart-url="{% url 'analytics:chart_data' %}?period={{ period }}">
+  <section class="card chart-card">
+    <h2 class="card__title">Income vs expenses (6 months)</h2>
+    <div class="chart-box"><canvas id="chart-trend" role="img" aria-label="Monthly income and expenses for the last six months"></canvas></div>
+  </section>
+  <section class="card chart-card">
+    <h2 class="card__title">Spending by category</h2>
+    <div class="chart-box"><canvas id="chart-categories" role="img" aria-label="Spending by category for the selected period"></canvas></div>
+    <p class="empty-chart muted" data-empty="categories" hidden>No expenses in this period.</p>
+  </section>
+  <section class="card chart-card">
+    <h2 class="card__title">Daily spending</h2>
+    <div class="chart-box"><canvas id="chart-daily" role="img" aria-label="Daily spending for the selected period"></canvas></div>
+  </section>
+  <section class="card chart-card">
+    <h2 class="card__title">Budget utilisation</h2>
+    <div class="chart-box"><canvas id="chart-budgets" role="img" aria-label="Percentage used of each active budget"></canvas></div>
+    <p class="empty-chart muted" data-empty="budgets" hidden>No active budgets. <a href="{% url 'budgeting:create' %}">Create one</a>.</p>
+  </section>
+</div>
+
+<div class="grid grid--2">
+  <section class="card">
+    <div class="row-between">
+      <h2 class="card__title">Savings goals</h2>
+      <a class="link" href="{% url 'savings:list' %}">Manage →</a>
+    </div>
+    {% if goals %}
+    <ul class="list-rows list-rows--stacked">
+      {% for goal in goals %}
+      <li>
+        <div class="row-between"><strong>{{ goal.name }}</strong><span class="small">{{ goal.saved_amount|ksh:0 }} / {{ goal.target_amount|ksh:0 }}</span></div>
+        {% include "partials/progress.html" with pct=goal.progress_percent state="goal" label=goal.name %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted">No active goals. <a href="{% url 'savings:create' %}">Create one</a> for rent or fees.</p>
+    {% endif %}
+  </section>
+
+  <section class="card card--flush">
+    <div class="row-between card__title--pad">
+      <h2 class="card__title">Recent activity</h2>
+      <a class="link" href="{% url 'transactions:expense_list' %}">All expenses →</a>
+    </div>
+    {% if recent %}
+    <ul class="activity">
+      {% for t in recent %}
+      <li class="activity__item">
+        <span class="activity__dot activity__dot--{{ t.type }}" aria-hidden="true"></span>
+        <span class="activity__main">
+          <strong>{{ t.label }}</strong>
+          <span class="muted small">{{ t.date|date:"d M" }}{% if t.description %} · {{ t.description|truncatechars:40 }}{% endif %}</span>
+        </span>
+        <span class="activity__amt {% if t.type == 'income' %}text-positive{% else %}text-negative{% endif %}">{% if t.type == 'income' %}+{% else %}−{% endif %}{{ t.amount|ksh:0 }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted card__title--pad">Nothing recorded yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if budgets %}
+<section>
+  <h2 class="section-title">Active budgets</h2>
+  <div class="grid grid--3">{% for s in budgets %}{% include "budgeting/_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'vendor/chartjs/chart.umd.min.js' %}" defer></script>
+<script src="{% static 'js/dashboard.js' %}" defer></script>
+{% endblock %}

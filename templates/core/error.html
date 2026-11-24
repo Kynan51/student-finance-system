@@ -1,0 +1,16 @@
+{% extends "base_public.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="center-page">
+  <div class="card auth-card">
+    <p class="eyebrow">Error {{ code }}</p>
+    <h1>{{ title }}</h1>
+    {% if code == 404 %}
+      <p>The page does not exist, or it belongs to another account.</p>
+    {% else %}
+      <p>Please try again in a moment.</p>
+    {% endif %}
+    <a class="btn btn--primary" href="{% url 'core:landing' %}">Go home</a>
+  </div>
+</section>
+{% endblock %}

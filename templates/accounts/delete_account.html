@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Delete account{% endblock %}
+{% block content %}
+<div class="card narrow card--danger">
+  <h1>Delete your account?</h1>
+  <p>This permanently removes your profile, income, expenses, budgets, savings goals, insights and notifications. It cannot be undone.</p>
+  <p class="muted">Tip: download a CSV report first if you want to keep a copy.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+    <div class="actions">
+      <button type="submit" class="btn btn--danger">Delete everything</button>
+      <a class="btn btn--ghost" href="{% url 'accounts:settings' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

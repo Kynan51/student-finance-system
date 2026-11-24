@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Categories</h1>
+    <p class="muted">Keywords help the app suggest a category from a description or pasted SMS.</p>
+  </div>
+</div>
+<div class="grid grid--2">
+  <section class="card">
+    <h2 class="card__title">Add your own category</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "partials/form_errors.html" %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <button type="submit" class="btn btn--primary">Add category</button>
+    </form>
+    {% if own_categories %}
+    <h3 class="h4 mt">Your categories</h3>
+    <ul class="list-rows">
+      {% for c in own_categories %}
+      <li>
+        <span><strong>{{ c.name }}</strong> <span class="chip chip--small">{{ c.get_kind_display }}</span>{% if c.is_essential %} <span class="chip chip--small chip--accent">Essential</span>{% endif %}</span>
+        <form method="post" action="{% url 'transactions:category_delete' c.pk %}">{% csrf_token %}<button type="submit" class="link link--danger" data-confirm="Delete the category {{ c.name }}?">Delete</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2 class="card__title">Built-in categories</h2>
+    <ul class="list-rows">
+      {% for c in system_categories %}
+      <li>
+        <span><strong>{{ c.name }}</strong> <span class="chip chip--small">{{ c.get_kind_display }}</span>{% if c.is_essential %} <span class="chip chip--small chip--accent">Essential</span>{% endif %}</span>
+        {% if c.keywords %}<span class="muted small">{{ c.keywords|truncatechars:60 }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

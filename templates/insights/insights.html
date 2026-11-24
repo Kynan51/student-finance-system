@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}AI insights{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>AI insights</h1>
+    <p class="muted">Generated from your own records. Each card shows the numbers and assumptions behind it.</p>
+  </div>
+  <form method="post" action="{% url 'ai_engine:refresh' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn--secondary">Recalculate now</button>
+  </form>
+</div>
+
+<div class="alert alert--info">{{ disclaimer }}</div>
+
+<div class="grid grid--2">
+  {% for i in insights %}
+  <article class="card insight insight--{{ i.severity }}">
+    <div class="row-between">
+      <p class="insight__kind">{{ i.get_kind_display }}</p>
+      <span class="reliability reliability--{{ i.reliability }}" title="How much the data supports this statement">Reliability: {{ i.get_reliability_display }}</span>
+    </div>
+    <h2 class="insight__title">{{ i.title }}</h2>
+    <p class="insight__msg">{{ i.message }}</p>
+    <details class="insight__details">
+      <summary>Why am I seeing this?</summary>
+      {% if i.assumptions %}<p class="small"><strong>Assumptions:</strong> {{ i.assumptions }}</p>{% endif %}
+      {% if i.metrics %}
+      <dl class="dl dl--compact">
+        {% for key, value in i.metrics.items %}
+          {% if key != "model_scores" %}<dt>{{ key|keylabel }}</dt><dd>{{ value|default_if_none:"—" }}</dd>{% endif %}
+        {% endfor %}
+      </dl>
+      {% endif %}
+      <p class="muted small">Generated {{ i.created_at|date:"d M Y, H:i" }}</p>
+    </details>
+  </article>
+  {% empty %}
+  <div class="card empty"><p class="empty__title">No insights yet</p><p class="muted">Add income and expenses first.</p></div>
+  {% endfor %}
+</div>
+
+{% if forecast and forecast.metrics.model_scores %}
+<section class="card card--flush">
+  <h2 class="card__title card__title--pad">Model comparison on your history</h2>
+  <p class="muted small card__title--pad">Each method predicted your next-7-day spending from past data only (rolling-origin backtest). Lower MAE is better. A learned model is used only if it beats the 14-day average by at least 5%.</p>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Method</th><th scope="col" class="num">MAE (KSh)</th><th scope="col" class="num">RMSE (KSh)</th><th scope="col" class="num">Tests</th><th scope="col">Used</th></tr></thead>
+      <tbody>
+        {% for s in forecast.metrics.model_scores %}
+        <tr>
+          <td data-label="Method">{{ s.label }}</td>
+          <td data-label="MAE" class="num">{% if s.mae is not None %}{{ s.mae|floatformat:0 }}{% else %}not enough data{% endif %}</td>
+          <td data-label="RMSE" class="num">{% if s.rmse is not None %}{{ s.rmse|floatformat:0 }}{% else %}—{% endif %}</td>
+          <td data-label="Tests" class="num">{{ s.n_origins }}</td>
+          <td data-label="Used">{% if s.name == forecast.metrics.model_selected %}<span class="status status--ok">Selected</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if history %}
+<section class="card">
+  <h2 class="card__title">Earlier insights</h2>
+  <ul class="list-rows">
+    {% for h in history %}
+    <li><span><strong>{{ h.title }}</strong> <span class="chip chip--small">{{ h.get_kind_display }}</span></span><span class="muted small">{{ h.created_at|date:"d M Y, H:i" }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

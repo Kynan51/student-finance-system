@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <p class="muted">Profile, preferences and security.</p>
+  </div>
+</div>
+
+<div class="grid grid--2">
+  <section class="card" aria-labelledby="profile-title">
+    <h2 id="profile-title" class="card__title">Profile</h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="section" value="profile">
+      {% with form=profile_form %}{% include "partials/form_errors.html" %}{% endwith %}
+      <div class="form-grid">
+        {% for field in profile_form %}{% include "partials/field.html" %}{% endfor %}
+      </div>
+      <p class="field__help">Semester dates power the semester view, runway and shortfall estimates.</p>
+      <button type="submit" class="btn btn--primary">Save profile</button>
+    </form>
+  </section>
+
+  <div class="stack">
+    <section class="card" aria-labelledby="prefs-title">
+      <h2 id="prefs-title" class="card__title">Notifications</h2>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="section" value="preferences">
+        {% for field in prefs_form %}{% include "partials/field.html" %}{% endfor %}
+        <button type="submit" class="btn btn--primary">Save preferences</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="pwd-title">
+      <h2 id="pwd-title" class="card__title">Change password</h2>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="section" value="password">
+        {% with form=password_form %}{% include "partials/form_errors.html" %}{% endwith %}
+        {% for field in password_form %}{% include "partials/field.html" %}{% endfor %}
+        <button type="submit" class="btn btn--primary">Change password</button>
+      </form>
+    </section>
+
+    <section class="card card--danger" aria-labelledby="danger-title">
+      <h2 id="danger-title" class="card__title">Delete account</h2>
+      <p>Permanently delete your account and every financial record linked to it.</p>
+      <a class="btn btn--danger" href="{% url 'accounts:delete_account' %}">Delete my account</a>
+    </section>
+  </div>
+</div>
+{% endblock %}

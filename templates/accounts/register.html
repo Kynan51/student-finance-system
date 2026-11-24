@@ -1,0 +1,22 @@
+{% extends "base_public.html" %}
+{% block title %}Create account{% endblock %}
+{% block content %}
+<section class="center-page">
+  <div class="card auth-card auth-card--wide">
+    <h1>Create your account</h1>
+    <p class="muted">We never ask for M-Pesa PINs, bank passwords, phone numbers or admission numbers.</p>
+    <form method="post" novalidate data-validate>
+      {% csrf_token %}
+      {% include "partials/form_errors.html" %}
+      <div class="form-grid">
+        {% for field in form %}
+          {% if field.name != "consent" %}{% include "partials/field.html" %}{% endif %}
+        {% endfor %}
+      </div>
+      {% with field=form.consent %}{% include "partials/field.html" %}{% endwith %}
+      <button type="submit" class="btn btn--primary btn--block">Create account</button>
+    </form>
+    <p class="auth-card__links">Already registered? <a href="{% url 'accounts:login' %}">Log in</a></p>
+  </div>
+</section>
+{% endblock %}

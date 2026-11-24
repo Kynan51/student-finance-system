@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}{{ goal.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ goal.name }}</h1>
+    <p class="muted">{{ goal.get_priority_display }} priority{% if goal.target_date %} · target {{ goal.target_date|date:"d M Y" }}{% endif %} · <span class="status status--{% if goal.status == 'completed' %}ok{% elif goal.status == 'archived' %}muted{% else %}info{% endif %}">{{ goal.get_status_display }}</span></p>
+    {% if goal.description %}<p>{{ goal.description }}</p>{% endif %}
+  </div>
+  <div class="actions">
+    <a class="btn btn--secondary" href="{% url 'savings:update' goal.pk %}">Edit</a>
+    <form method="post" action="{% url 'savings:archive' goal.pk %}">{% csrf_token %}
+      <button type="submit" class="btn btn--ghost" {% if goal.status != 'archived' %}data-confirm="Archive this goal? Any amount set aside will be released back to your available balance."{% endif %}>{% if goal.status == 'archived' %}Restore{% else %}Archive{% endif %}</button>
+    </form>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><p class="stat__label">Set aside</p><p class="stat__value">{{ goal.saved_amount|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Target</p><p class="stat__value">{{ goal.target_amount|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Still needed</p><p class="stat__value">{{ goal.remaining_amount|ksh:0 }}</p></div>
+  <div class="stat stat--accent"><p class="stat__label">Available to allocate</p><p class="stat__value">{{ balances.available_balance|ksh:0 }}</p></div>
+</div>
+
+<section class="card">
+  {% include "partials/progress.html" with pct=goal.progress_percent state="goal" label="Goal progress" %}
+  <p class="small">{{ goal.progress_percent }}% of target</p>
+</section>
+
+<div class="grid grid--2">
+  {% if goal.status != 'archived' %}
+  <section class="card">
+    <h2 class="card__title">Set aside or release</h2>
+    <form method="post" action="{% url 'savings:move' goal.pk %}" novalidate>
+      {% csrf_token %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <button type="submit" class="btn btn--primary">Save</button>
+    </form>
+    <p class="muted small">Allocations reduce your <em>available</em> balance but are not counted as expenses. Releasing returns the amount to your available balance.</p>
+  </section>
+  {% endif %}
+
+  <section class="card card--flush">
+    <h2 class="card__title card__title--pad">History (audit trail)</h2>
+    {% if entries %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Note</th><th scope="col" class="num">Amount</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+        <tbody>
+        {% for e in entries %}
+          <tr class="{% if e.is_reversed %}is-reversed{% endif %}">
+            <td data-label="Date">{{ e.date|date:"d M Y" }}</td>
+            <td data-label="Type">{{ e.get_entry_type_display }}{% if e.reverses %} <span class="muted small">(of #{{ e.reverses.pk }})</span>{% endif %}</td>
+            <td data-label="Note">{{ e.note|default:"—" }} <span class="muted small">#{{ e.pk }}</span></td>
+            <td data-label="Amount" class="num {% if e.amount < 0 %}text-negative{% else %}text-positive{% endif %}">{{ e.amount|ksh }}</td>
+            <td class="row-actions">
+              {% if e.entry_type != 'reversal' and not e.is_reversed %}
+              <form method="post" action="{% url 'savings:reverse' goal.pk e.pk %}">{% csrf_token %}
+                <input type="hidden" name="reason" value="Corrected by student">
+                <button type="submit" class="link link--danger" data-confirm="Reverse this entry? A correcting entry will be added; the original stays in the history.">Reverse</button>
+              </form>
+              {% elif e.is_reversed %}<span class="muted small">Reversed</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="muted card__title--pad">No entries yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base_public.html" %}
+{% block title %}Smarter money for campus life{% endblock %}
+{% block body_class %}public--landing{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero__inner">
+    <p class="eyebrow">For Kenyan university students</p>
+    <h1>Make your HELB and upkeep last the whole semester.</h1>
+    <p class="hero__lead">Track irregular income, log daily spending in seconds, plan budgets for rent and exam fees, and get honest estimates of how long your money will last.</p>
+    <div class="hero__actions">
+      <a class="btn btn--accent btn--lg" href="{% url 'accounts:register' %}">Create a free account</a>
+      <a class="btn btn--ghost-light btn--lg" href="{% url 'accounts:login' %}">Log in</a>
+    </div>
+    <p class="hero__note">Want to look around first? Log in with <strong>demo</strong> / <strong>DemoPass2026!</strong> (synthetic data).</p>
+  </div>
+</section>
+
+<section class="features" aria-labelledby="features-title">
+  <h2 id="features-title" class="section-title">Everything in one calm dashboard</h2>
+  <div class="grid grid--3">
+    <article class="card feature">
+      <h3>Irregular income, handled</h3>
+      <p>Record HELB disbursements, money from parents or guardians, bursaries and side-hustle payments as they arrive.</p>
+    </article>
+    <article class="card feature">
+      <h3>Expenses in seconds</h3>
+      <p>Add an expense manually or paste an M-Pesa confirmation SMS. The app reads the amount and date and suggests a category.</p>
+    </article>
+    <article class="card feature">
+      <h3>Budgets that warn early</h3>
+      <p>Set monthly or semester limits per category, add fixed obligations like hostel rent, and get warned before you overspend.</p>
+    </article>
+    <article class="card feature">
+      <h3>Virtual savings goals</h3>
+      <p>Set money aside on paper for rent, fees or emergencies. Your available balance shows only what is truly free to spend.</p>
+    </article>
+    <article class="card feature">
+      <h3>Honest AI insights</h3>
+      <p>See your estimated financial runway, possible shortfalls, unusual spending and trends, each with the numbers behind it.</p>
+    </article>
+    <article class="card feature">
+      <h3>Reports and install</h3>
+      <p>Download monthly or semester reports as CSV or PDF, and install the site on your phone like an app.</p>
+    </article>
+  </div>
+</section>
+
+<section class="trust card card--soft">
+  <h2 class="section-title">Your data, your control</h2>
+  <ul class="list-check">
+    <li>No M-Pesa PINs, bank passwords or phone numbers are ever requested.</li>
+    <li>No connection to M-Pesa or bank APIs: you enter or paste your own records.</li>
+    <li>Every record is visible only to you, and you can delete your account and data at any time.</li>
+  </ul>
+</section>
+{% endblock %}

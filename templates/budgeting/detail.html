@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}{{ s.budget.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ s.budget.name }}</h1>
+    <p class="muted">{{ s.budget.get_period_display }} · {{ s.budget.start_date|date:"d M Y" }} – {{ s.budget.end_date|date:"d M Y" }} · warns at {{ s.budget.warning_threshold }}%</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn--secondary" href="{% url 'budgeting:update' s.budget.pk %}">Edit</a>
+    <a class="btn btn--ghost" href="{% url 'budgeting:delete' s.budget.pk %}">Delete</a>
+  </div>
+</div>
+
+{% if s.state == 'exceeded' %}
+  <div class="alert alert--danger">You have spent more than this budget allows.</div>
+{% elif s.state == 'warning' %}
+  <div class="alert alert--warning">You have used {{ s.percent|floatformat:0 }}% of this budget.</div>
+{% endif %}
+
+<div class="stats">
+  <div class="stat"><p class="stat__label">Spent</p><p class="stat__value">{{ s.spent|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Limit</p><p class="stat__value">{{ s.budget.total_limit|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Remaining</p><p class="stat__value {% if s.remaining < 0 %}text-negative{% endif %}">{{ s.remaining|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Free after obligations</p><p class="stat__value {% if s.free_after_obligations < 0 %}text-negative{% endif %}">{{ s.free_after_obligations|ksh:0 }}</p>
+    {% if s.is_active and s.days_left %}{% if s.daily_allowance > 0 %}<p class="stat__hint">≈ {{ s.daily_allowance|ksh:0 }} per day for {{ s.days_left }} day{{ s.days_left|pluralize }}</p>{% else %}<p class="stat__hint">Nothing left after obligations for the last {{ s.days_left }} day{{ s.days_left|pluralize }}</p>{% endif %}{% endif %}
+  </div>
+</div>
+
+<section class="card">
+  <h2 class="card__title">Overall utilisation</h2>
+  {% include "partials/progress.html" with pct=s.percent state=s.state marker=s.time_percent label="Overall budget" %}
+  <p class="muted small">{{ s.percent|floatformat:0 }}% of the money used · {{ s.time_percent|floatformat:0 }}% of the period gone (the vertical marker).</p>
+</section>
+
+<div class="grid grid--2">
+  <section class="card">
+    <h2 class="card__title">Category limits</h2>
+    {% if s.categories %}
+    <ul class="list-rows list-rows--stacked">
+      {% for c in s.categories %}
+      <li>
+        <div class="row-between">
+          <strong>{{ c.category.name }}</strong>
+          <span class="small">{{ c.spent|ksh:0 }} / {{ c.limit|ksh:0 }}</span>
+        </div>
+        {% include "partials/progress.html" with pct=c.percent state=c.state label=c.category.name %}
+        <div class="row-between small">
+          <span class="status status--{{ c.state }}">{{ c.percent|floatformat:0 }}%</span>
+          <form method="post" action="{% url 'budgeting:limit_delete' s.budget.pk c.limit_obj.pk %}">{% csrf_token %}<button class="link link--danger" type="submit" data-confirm="Remove the {{ c.category.name }} limit?">Remove</button></form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="muted">No category limits yet.</p>
+    {% endif %}
+    <form method="post" action="{% url 'budgeting:limit_add' s.budget.pk %}" class="inline-form" novalidate>
+      {% csrf_token %}
+      <h3 class="h4">Add a category limit</h3>
+      <div class="form-grid">{% for field in limit_form %}{% include "partials/field.html" %}{% endfor %}</div>
+      <button type="submit" class="btn btn--secondary">Add limit</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">Fixed obligations</h2>
+    <p class="muted small">Planned commitments such as hostel rent or exam fees. Unpaid amounts are reserved from what is left.</p>
+    {% if s.obligations %}
+    <ul class="list-rows">
+      {% for o in s.obligations %}
+      <li>
+        <span><strong>{{ o.name }}</strong><br><span class="small muted">{{ o.amount|ksh }} · due {{ o.due_date|date:"d M" }}</span></span>
+        <span class="actions actions--tight">
+          <form method="post" action="{% url 'budgeting:obligation_toggle' s.budget.pk o.pk %}">{% csrf_token %}<button type="submit" class="chip {% if o.is_paid %}chip--accent{% endif %}" aria-pressed="{{ o.is_paid|yesno:'true,false' }}">{% if o.is_paid %}Paid ✓{% else %}Mark paid{% endif %}</button></form>
+          <form method="post" action="{% url 'budgeting:obligation_delete' s.budget.pk o.pk %}">{% csrf_token %}<button type="submit" class="link link--danger" data-confirm="Remove {{ o.name }}?">Remove</button></form>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="small">Unpaid total: <strong>{{ s.unpaid_obligations|ksh }}</strong></p>
+    {% else %}
+      <p class="muted">No obligations yet.</p>
+    {% endif %}
+    <form method="post" action="{% url 'budgeting:obligation_add' s.budget.pk %}" class="inline-form" novalidate>
+      {% csrf_token %}
+      <h3 class="h4">Add an obligation</h3>
+      <div class="form-grid">{% for field in obligation_form %}{% include "partials/field.html" %}{% endfor %}</div>
+      <button type="submit" class="btn btn--secondary">Add obligation</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

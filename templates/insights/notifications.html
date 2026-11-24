@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Notifications</h1>
+    <p class="muted">Budget warnings and important insights.</p>
+  </div>
+  {% if unread_notifications %}
+  <form method="post" action="{% url 'ai_engine:notifications_read_all' %}">{% csrf_token %}<button type="submit" class="btn btn--secondary">Mark all as read</button></form>
+  {% endif %}
+</div>
+<div class="card card--flush">
+  {% if items %}
+  <ul class="notif-list">
+    {% for n in items %}
+    <li class="notif notif--{{ n.level }}{% if not n.is_read %} is-unread{% endif %}">
+      <div class="notif__body">
+        <p class="notif__title">{{ n.title }}</p>
+        <p class="notif__msg">{{ n.message }}</p>
+        <p class="muted small">{{ n.created_at|date:"d M Y, H:i" }}</p>
+      </div>
+      {% if not n.is_read or n.link %}
+      <form method="post" action="{% url 'ai_engine:notification_read' n.pk %}">{% csrf_token %}
+        <button type="submit" class="btn btn--ghost btn--sm">{% if n.link %}Open{% else %}Mark read{% endif %}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty"><p class="empty__title">You're all caught up</p><p class="muted">Warnings appear here when a budget nears its limit.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

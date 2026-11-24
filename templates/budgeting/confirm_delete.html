@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Delete budget{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Delete “{{ budget.name }}”?</h1>
+  <p>The budget, its category limits and obligations will be removed. Your income and expense records are not affected.</p>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <button type="submit" class="btn btn--danger">Delete budget</button>
+    <a class="btn btn--ghost" href="{% url 'budgeting:detail' budget.pk %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

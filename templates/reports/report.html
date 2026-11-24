@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Reports</h1>
+    <p class="muted">{{ r.range.label }} · {{ r.range.start|date:"d M Y" }} – {{ r.range.end|date:"d M Y" }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn--secondary" href="{% url 'reports:csv' %}?{{ query }}">{% include "partials/icon.html" with name="download" %} CSV</a>
+    <a class="btn btn--primary" href="{% url 'reports:pdf' %}?{{ query }}">{% include "partials/icon.html" with name="download" %} PDF</a>
+  </div>
+</div>
+
+<form method="get" class="card filters" data-report-form>
+  {% include "partials/form_errors.html" %}
+  <div class="filters__grid">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>
+  <button type="submit" class="btn btn--secondary">Show report</button>
+</form>
+
+<div class="stats">
+  <div class="stat"><p class="stat__label">Income</p><p class="stat__value text-positive">{{ r.totals.income|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Expenses</p><p class="stat__value text-negative">{{ r.totals.expenses|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Net</p><p class="stat__value">{{ r.totals.net|ksh:0 }}</p></div>
+  <div class="stat"><p class="stat__label">Avg daily spend</p><p class="stat__value">{{ r.avg_daily_spend|ksh:0 }}</p>{% if r.savings_rate is not None %}<p class="stat__hint">{{ r.savings_rate|floatformat:0 }}% of income set aside</p>{% endif %}</div>
+</div>
+
+<div class="grid grid--2">
+  <section class="card card--flush">
+    <h2 class="card__title card__title--pad">Spending by category</h2>
+    {% if r.categories %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Category</th><th scope="col" class="num">Share</th><th scope="col" class="num">Amount</th></tr></thead>
+        <tbody>{% for c in r.categories %}<tr><td data-label="Category">{{ c.category }}</td><td data-label="Share" class="num">{{ c.share|floatformat:1 }}%</td><td data-label="Amount" class="num">{{ c.total|ksh }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% else %}<p class="muted card__title--pad">No expenses in this period.</p>{% endif %}
+  </section>
+  <section class="card card--flush">
+    <h2 class="card__title card__title--pad">Income by source</h2>
+    {% if r.income_sources %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Source</th><th scope="col" class="num">Amount</th></tr></thead>
+        <tbody>{% for s in r.income_sources %}<tr><td data-label="Source">{{ s.source }}</td><td data-label="Amount" class="num">{{ s.total|ksh }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% else %}<p class="muted card__title--pad">No income in this period.</p>{% endif %}
+  </section>
+</div>
+<p class="muted small">Reports include only your own records. Savings goals are virtual allocations and are shown separately from expenses.</p>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/forms.js' %}" defer></script>{% endblock %}

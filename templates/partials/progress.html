@@ -1,0 +1,4 @@
+{% load finance %}<div class="progress progress--{{ state|default:'ok' }}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct|clamp_pct }}" aria-label="{{ label|default:'Progress' }}: {{ pct|floatformat:0 }}%">
+  <span class="progress__bar" style="width: {{ pct|clamp_pct }}%"></span>
+  {% if marker is not None %}<span class="progress__marker" style="left: {{ marker|clamp_pct }}%" title="Time elapsed"></span>{% endif %}
+</div>

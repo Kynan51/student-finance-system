@@ -1,0 +1,23 @@
+{% extends "base_public.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<section class="center-page">
+  <div class="card auth-card">
+    <h1>Welcome back</h1>
+    <p class="muted">Log in to see your balance and budgets.</p>
+    <form method="post" novalidate data-validate>
+      {% csrf_token %}
+      {% include "partials/form_errors.html" %}
+      {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn--primary btn--block">Log in</button>
+    </form>
+    <p class="auth-card__links">
+      <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+      <span aria-hidden="true">·</span>
+      <a href="{% url 'accounts:register' %}">Create an account</a>
+    </p>
+    <p class="hint">Demo: <code>demo</code> / <code>DemoPass2026!</code> (synthetic data)</p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}Dashboard{% endblock %} · {{ APP_NAME }}</title>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="app">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <button type="button" class="icon-btn topbar__menu" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false" data-nav-toggle>
+      {% include "partials/icon.html" with name="menu" %}
+    </button>
+    <a class="brand brand--small" href="{% url 'analytics:dashboard' %}"><span class="brand__mark" aria-hidden="true">KSh</span> {{ APP_NAME }}</a>
+    <a class="icon-btn topbar__bell" href="{% url 'ai_engine:notifications' %}" aria-label="Notifications{% if unread_notifications %}, {{ unread_notifications }} unread{% endif %}">
+      {% include "partials/icon.html" with name="bell" %}
+      {% if unread_notifications %}<span class="badge badge--dot">{{ unread_notifications }}</span>{% endif %}
+    </a>
+  </header>
+
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar__head">
+      <a class="brand" href="{% url 'analytics:dashboard' %}"><span class="brand__mark" aria-hidden="true">KSh</span> {{ APP_NAME }}</a>
+      <button type="button" class="icon-btn sidebar__close" aria-label="Close navigation" data-nav-close>
+        {% include "partials/icon.html" with name="close" %}
+      </button>
+    </div>
+    {% with path=request.path %}
+    <nav class="nav">
+      <a class="nav__link{% if path|slice:':10' == '/dashboard' %} is-active{% endif %}" href="{% url 'analytics:dashboard' %}">{% include "partials/icon.html" with name="dashboard" %}<span>Dashboard</span></a>
+      <a class="nav__link{% if '/transactions/income' in path %} is-active{% endif %}" href="{% url 'transactions:income_list' %}">{% include "partials/icon.html" with name="income" %}<span>Income</span></a>
+      <a class="nav__link{% if '/transactions/expenses' in path %} is-active{% endif %}" href="{% url 'transactions:expense_list' %}">{% include "partials/icon.html" with name="expense" %}<span>Expenses</span></a>
+      <a class="nav__link{% if path|slice:':8' == '/budgets' %} is-active{% endif %}" href="{% url 'budgeting:list' %}">{% include "partials/icon.html" with name="budget" %}<span>Budgets</span></a>
+      <a class="nav__link{% if path|slice:':8' == '/savings' %} is-active{% endif %}" href="{% url 'savings:list' %}">{% include "partials/icon.html" with name="savings" %}<span>Savings goals</span></a>
+      <a class="nav__link{% if path == '/insights/' %} is-active{% endif %}" href="{% url 'ai_engine:insights' %}">{% include "partials/icon.html" with name="insights" %}<span>AI insights</span></a>
+      <a class="nav__link{% if path|slice:':8' == '/reports' %} is-active{% endif %}" href="{% url 'reports:report' %}">{% include "partials/icon.html" with name="reports" %}<span>Reports</span></a>
+      <a class="nav__link{% if '/notifications' in path %} is-active{% endif %}" href="{% url 'ai_engine:notifications' %}">{% include "partials/icon.html" with name="bell" %}<span>Notifications</span>{% if unread_notifications %}<span class="badge">{{ unread_notifications }}</span>{% endif %}</a>
+      <a class="nav__link{% if '/transactions/categories' in path %} is-active{% endif %}" href="{% url 'transactions:categories' %}">{% include "partials/icon.html" with name="tag" %}<span>Categories</span></a>
+      <a class="nav__link{% if '/accounts/settings' in path %} is-active{% endif %}" href="{% url 'accounts:settings' %}">{% include "partials/icon.html" with name="settings" %}<span>Settings</span></a>
+    </nav>
+    {% endwith %}
+    <div class="sidebar__foot">
+      <button type="button" class="nav__link nav__link--install" data-install-button hidden>{% include "partials/icon.html" with name="install" %}<span>Install app</span></button>
+      <p class="sidebar__user">Signed in as <strong>{{ user.display_name }}</strong></p>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="nav__link nav__link--button">{% include "partials/icon.html" with name="logout" %}<span>Sign out</span></button>
+      </form>
+    </div>
+  </aside>
+  <div class="scrim" data-nav-close hidden></div>
+
+  <main id="main" class="main" tabindex="-1">
+    {% include "partials/messages.html" %}
+    {% block content %}{% endblock %}
+    <footer class="app-footer">
+      <p>Estimates are based on your recorded data and are not financial advice. Savings goals are virtual allocations.</p>
+    </footer>
+  </main>
+
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <script src="{% static 'js/pwa-register.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

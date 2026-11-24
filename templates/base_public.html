@@ -1,0 +1,31 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}Welcome{% endblock %} · {{ APP_NAME }}</title>
+</head>
+<body class="public {% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="public-header">
+    <a class="brand" href="{% url 'core:landing' %}"><span class="brand__mark" aria-hidden="true">KSh</span> {{ APP_NAME }}</a>
+    <nav class="public-header__nav" aria-label="Account">
+      {% if user.is_authenticated %}
+        <a class="btn btn--ghost-light" href="{% url 'analytics:dashboard' %}">Open dashboard</a>
+      {% else %}
+        <a class="btn btn--ghost-light" href="{% url 'accounts:login' %}">Log in</a>
+        <a class="btn btn--accent" href="{% url 'accounts:register' %}">Create account</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    {% include "partials/messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="public-footer">
+    <p>{{ APP_FULL_NAME }} · Built for Kenyan university students · <a href="{% url 'core:install' %}">Install as an app</a></p>
+  </footer>
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <script src="{% static 'js/pwa-register.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

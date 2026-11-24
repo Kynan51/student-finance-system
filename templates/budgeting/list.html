@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Budgets</h1>
+    <p class="muted">Compare planned spending with what you have actually spent.</p>
+  </div>
+  <a class="btn btn--primary" href="{% url 'budgeting:create' %}">{% include "partials/icon.html" with name="plus" %} New budget</a>
+</div>
+
+{% if not active and not other %}
+<div class="card empty">
+  <p class="empty__title">No budgets yet</p>
+  <p class="muted">Create a monthly or semester budget with limits for food, transport and more.</p>
+  <a class="btn btn--primary" href="{% url 'budgeting:create' %}">Create your first budget</a>
+</div>
+{% endif %}
+
+{% if active %}
+<h2 class="section-title">Active</h2>
+<div class="grid grid--2">
+  {% for s in active %}{% include "budgeting/_card.html" %}{% endfor %}
+</div>
+{% endif %}
+
+{% if other %}
+<h2 class="section-title">Past and upcoming</h2>
+<div class="grid grid--2">
+  {% for s in other %}{% include "budgeting/_card.html" %}{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

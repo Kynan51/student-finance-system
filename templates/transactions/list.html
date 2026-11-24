@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load finance %}
+{% block title %}{{ cfg.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ cfg.title }}</h1>
+    <p class="muted">{{ record_count }} record{{ record_count|pluralize }} · total {{ filtered_total|ksh }}</p>
+  </div>
+  <a class="btn btn--primary" href="{% if ledger == 'income' %}{% url 'transactions:income_create' %}{% else %}{% url 'transactions:expense_create' %}{% endif %}">
+    {% include "partials/icon.html" with name="plus" %} Add {{ cfg.singular }}
+  </a>
+</div>
+
+{% if paste_form %}
+<details class="card paste-card" data-paste-card>
+  <summary class="paste-card__summary">Paste an M-Pesa SMS to fill the form automatically</summary>
+  <form class="paste-card__form" data-paste-form data-parse-url="{% url 'transactions:parse_message' %}" data-expense-url="{% url 'transactions:expense_create' %}" data-income-url="{% url 'transactions:income_create' %}">
+    {% csrf_token %}
+    <label class="field__label" for="id_message">M-Pesa confirmation message</label>
+    {{ paste_form.message }}
+    <p class="field__help">Only the amount, date, reference and payee name are read. Phone numbers and balances are ignored and never stored.</p>
+    <div class="actions">
+      <button type="submit" class="btn btn--secondary">Read message</button>
+    </div>
+    <div class="paste-card__result" data-paste-result aria-live="polite"></div>
+  </form>
+</details>
+{% endif %}
+
+<form method="get" class="card filters" role="search" aria-label="Filter {{ cfg.title|lower }}">
+  <div class="filters__grid">
+    {% for field in filter_form %}{% include "partials/field.html" %}{% endfor %}
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn btn--secondary">Apply filters</button>
+    <a class="btn btn--ghost" href="{% if ledger == 'income' %}{% url 'transactions:income_list' %}{% else %}{% url 'transactions:expense_list' %}{% endif %}">Clear</a>
+  </div>
+</form>
+
+<div class="card card--flush">
+  {% if page_obj.object_list %}
+  <div class="table-wrap">
+    <table class="table">
+      <caption class="sr-only">{{ cfg.title }} records</caption>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">{% if ledger == 'income' %}Source{% else %}Category{% endif %}</th>
+          <th scope="col">Description</th>
+          {% if ledger == 'expense' %}<th scope="col">Paid with</th>{% endif %}
+          <th scope="col" class="num">Amount</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in page_obj %}
+        <tr>
+          <td data-label="Date">{{ t.date|date:"d M Y" }}</td>
+          <td data-label="{% if ledger == 'income' %}Source{% else %}Category{% endif %}"><span class="chip">{% if ledger == 'income' %}{{ t.source }}{% else %}{{ t.category }}{% endif %}</span></td>
+          <td data-label="Description">{{ t.description|default:"—" }}{% if t.reference %} <span class="muted small">· {{ t.reference }}</span>{% endif %}</td>
+          {% if ledger == 'expense' %}<td data-label="Paid with">{{ t.get_payment_method_display }}</td>{% endif %}
+          <td data-label="Amount" class="num {% if ledger == 'income' %}text-positive{% else %}text-negative{% endif %}">{{ t.amount|ksh }}</td>
+          <td class="row-actions">
+            {% if ledger == 'income' %}
+              <a class="link" href="{% url 'transactions:income_update' t.pk %}">Edit</a>
+              <a class="link link--danger" href="{% url 'transactions:income_delete' t.pk %}">Delete</a>
+            {% else %}
+              <a class="link" href="{% url 'transactions:expense_update' t.pk %}">Edit</a>
+              <a class="link link--danger" href="{% url 'transactions:expense_delete' t.pk %}">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.has_other_pages %}
+  <nav class="pagination" aria-label="Pagination">
+    {% if page_obj.has_previous %}<a class="btn btn--ghost btn--sm" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}
+    <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a class="btn btn--ghost btn--sm" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next →</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}
+  <div class="empty">
+    <p class="empty__title">No {{ cfg.title|lower }} found</p>
+    <p class="muted">{% if request.GET %}Try clearing the filters.{% else %}Add your first {{ cfg.singular }} to get started.{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/forms.js' %}" defer></script>{% endblock %}
